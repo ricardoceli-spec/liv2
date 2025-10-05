@@ -6,14 +6,14 @@ LABEL fly_launch_runtime="laravel"
 
 # Instalar dependencias del sistema
 RUN apt-get update && apt-get install -y \
-    git curl zip unzip sqlite3 libzip-dev vim-tiny \
+    git curl zip unzip sqlite3 libzip-dev vim-tiny nginx supervisor cron \
     && docker-php-ext-install pdo pdo_sqlite mbstring zip xml \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Copiar Composer desde la imagen oficial de Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
-# Crear directorio de la app
+# Copiar la app
 WORKDIR /var/www/html
 COPY . .
 
@@ -54,7 +54,7 @@ RUN if [ -f "vite.config.js" ] || [ -f "vite.config.ts" ]; then \
 # -----------------------------
 FROM php:8.2-fpm AS final
 
-# Instalar dependencias de sistema necesarias en producción
+# Instalar dependencias necesarias
 RUN apt-get update && apt-get install -y \
     sqlite3 nginx supervisor cron zip unzip \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
@@ -73,10 +73,11 @@ RUN mkdir -p /data && touch /data/database.sqlite && chown -R www-data:www-data 
 # Permisos
 RUN chown -R www-data:www-data /var/www/html
 
+# Crear un entrypoint simple
+COPY entrypoint.sh /entrypoint
+RUN chmod +x /entrypoint
+
 # Exponer puerto de Fly.io
 EXPOSE 8080
-
-# Entrypoint
-COPY .fly/entrypoint.sh /entrypoint
-RUN chmod +x /entrypoint
 ENTRYPOINT ["/entrypoint"]
+
