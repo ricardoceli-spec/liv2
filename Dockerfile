@@ -1,8 +1,6 @@
 # syntax = docker/dockerfile:experimental
 
-ARG PHP_VERSION=8.2
-ARG NODE_VERSION=18
-FROM ubuntu:22.04 as base
+FROM php:8.2-fpm AS base
 LABEL fly_launch_runtime="laravel"
 
 # PHP_VERSION needs to be repeated here
